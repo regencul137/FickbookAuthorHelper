@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
-    id("dagger.hilt.android.plugin")
+    id("com.google.dagger.hilt.android") version "2.42" apply true
     kotlin("kapt")
 }
 
@@ -58,8 +58,9 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
-    implementation("com.google.dagger:hilt-android:2.42")
-    kapt("com.google.dagger:hilt-compiler:2.42")
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
+    implementation("com.google.accompanist:accompanist-drawablepainter:0.34.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
