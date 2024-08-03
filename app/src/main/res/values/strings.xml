@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">FickbookAuthorHelper</string>
+    <string name="warning_signed_out">You are signed out!</string>
+    <string name="sign_in">Sign In</string>
 </resources>

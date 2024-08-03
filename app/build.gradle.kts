@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     kapt(libs.hilt.compiler)
     implementation(libs.accompanist.drawablepainter)
+    implementation(libs.androidx.lifecycle.livedata.ktx)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
