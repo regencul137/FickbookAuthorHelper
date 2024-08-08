@@ -2,4 +2,13 @@
     <string name="app_name">FickbookAuthorHelper</string>
     <string name="warning_signed_out">You are signed out!</string>
     <string name="sign_in">Sign In</string>
+    <string name="error_connection_reset">Connection failed. Please contact the developer.</string>
+    <string name="error_invalid_credentials">Authentication failed. Please, check your username and password…</string>
+    <string name="error_user_not_found">User not found. Please, check your username…</string>
+    <string name="error_parse_response">Unexpected response from the website. Please, contact the developer…</string>
+    <string name="error_request_failed">The website has returned code %d. Please, try later or contact the developer…</string>
+    <string name="error_sign_in_failed">The website has returned unknown authentication error. Please, try later or contact the developer…</string>
+    <string name="error_timeout">The response timeout expired. Please, try later…</string>
+    <string name="error_backend_unknown_exception">An unknown error occurred while executing your request. Please, try later or contact the developer…</string>
+    <string name="loading">Loading…</string>
 </resources>
