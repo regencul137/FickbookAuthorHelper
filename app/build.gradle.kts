@@ -68,6 +68,11 @@ dependencies {
     kapt(libs.hilt.compiler)
     implementation(libs.accompanist.drawablepainter)
     implementation(libs.androidx.lifecycle.livedata.ktx)
+    implementation(libs.okhttp)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.jsoup)
+    implementation(libs.androidx.security.crypto)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
