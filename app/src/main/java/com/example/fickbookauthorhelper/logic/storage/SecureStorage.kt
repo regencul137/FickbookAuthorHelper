@@ -1,9 +1,9 @@
-package com.example.fickbookauthorhelper.logic
+package com.example.fickbookauthorhelper.logic.storage
 
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKeys
+import androidx.security.crypto.MasterKey
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,16 +22,17 @@ interface ISecureStorageProvider {
     fun getPassword(): String?
 }
 
-class SecureStorage @Inject constructor(@ApplicationContext applicationContext: Context) : ISecureStorageSaver,
+class SecureStorage @Inject constructor(@ApplicationContext applicationContext: Context) :
+    ISecureStorageSaver,
     ISecureStorageProvider {
     private val sharedPreferences: SharedPreferences
 
     init {
-        val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+        val masterKey = MasterKey.Builder(applicationContext).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()
         sharedPreferences = EncryptedSharedPreferences.create(
-            "secure_prefs",
-            masterKeyAlias,
             applicationContext,
+            PREFS_NAME,
+            masterKey,
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         )

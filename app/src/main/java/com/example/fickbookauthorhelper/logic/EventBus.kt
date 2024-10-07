@@ -1,38 +1,42 @@
 package com.example.fickbookauthorhelper.logic
 
-import android.graphics.drawable.Drawable
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
 interface IEventProvider {
-    val events: SharedFlow<FHEvent>
+    val events: SharedFlow<IEvent>
 }
 
 interface IEventEmitter {
-    suspend fun emit(event: FHEvent)
+    fun pushEvent(event: IEvent)
 }
 
-sealed class FHEvent {
-    data object SignedInEvent : FHEvent()
-    data object SignedOutEvent : FHEvent()
-    data object CheckSignInSuccess : FHEvent()
-    data class UserNameLoaded(val name: String) : FHEvent()
-    data class UserAvatarLoaded(val avatar: Drawable?) : FHEvent()
+interface IEvent
+
+sealed class BaseEvent : IEvent {
+    data object ConnectionCorrupted : BaseEvent()
 }
 
 class EventBus @Inject constructor() : IEventProvider, IEventEmitter {
-    private val _events = MutableSharedFlow<FHEvent>()
-    override val events: SharedFlow<FHEvent> = _events.asSharedFlow()
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
-    override suspend fun emit(event: FHEvent) {
-        _events.emit(event)
+    private val _events = MutableSharedFlow<IEvent>()
+    override val events: SharedFlow<IEvent> = _events.asSharedFlow()
+
+    override fun pushEvent(event: IEvent) {
+        println("EventBus >> $event")
+        scope.launch { _events.emit(event) }
     }
 }
 

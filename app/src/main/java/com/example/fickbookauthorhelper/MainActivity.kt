@@ -10,52 +10,62 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.fickbookauthorhelper.ui.Feed
+import com.example.fickbookauthorhelper.logic.AppLifecycleObserver
+import com.example.fickbookauthorhelper.ui.feed.FeedView
+import com.example.fickbookauthorhelper.ui.initialization.InitializationView
+import com.example.fickbookauthorhelper.ui.signIn.SignIn
 import com.example.fickbookauthorhelper.ui.theme.FickbookAuthorHelperTheme
+import com.example.fickbookauthorhelper.ui.user.UserView
+import com.example.fickbookauthorhelper.ui.views.RequestPermissionsView
+import com.example.fickbookauthorhelper.ui.views.WebView
 import dagger.hilt.android.AndroidEntryPoint
-import mockPageModel
-import mockUser
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val model: MainViewModel by viewModels()
 
+    @Inject
+    lateinit var lifecycleObserver: AppLifecycleObserver
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        lifecycle.addObserver(lifecycleObserver)
         enableEdgeToEdge()
         setContent {
             FickbookAuthorHelperTheme {
-                Content(model)
+                window.statusBarColor = MaterialTheme.colorScheme.background.toArgb()
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(color = Color.Transparent)
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.background), contentDescription = "",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.FillBounds
+                    )
+                    Content(model)
+                }
             }
         }
     }
@@ -64,193 +74,73 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun Content(model: MainViewModel) {
     val state by model.state.collectAsState()
-    Scaffold(modifier = Modifier.fillMaxSize(),
+    Scaffold(modifier = Modifier
+        .fillMaxSize()
+        .background(color = Color.Transparent),
+        contentColor = Color.Transparent,
+        containerColor = Color.Transparent,
         topBar = {
-            when (val currentState = state) {
-                is MainViewModel.State.NotSignedIn,
-                MainViewModel.State.SigningIn -> {
+            if (state == MainViewModel.State.SignedIn)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .padding(
+                            top = WindowInsets.systemBars
+                                .asPaddingValues()
+                                .calculateTopPadding()
+                        )
+                        .background(MaterialTheme.colorScheme.background)
+                ) {
+                    UserView(
+                        contentColor = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
+                        onSignOutClick = { model.signOut() }
+                    )
                 }
-
-                is MainViewModel.State.SignedIn -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentHeight()
-                            .padding(
-                                top = WindowInsets.systemBars
-                                    .asPaddingValues()
-                                    .calculateTopPadding()
-                            )
-                            .padding(horizontal = 16.dp, vertical = 12.dp)
-                            .background(MaterialTheme.colorScheme.background)
-                    ) {
-                        UserBlock(user = currentState.user)
-                    }
-                }
-            }
         }) { innerPadding ->
         Column(
-            verticalArrangement = if (state is MainViewModel.State.SignedIn) Arrangement.Top else Arrangement.Center,
+            verticalArrangement = if (state == MainViewModel.State.Initialization
+                || state is MainViewModel.State.PermissionNeeded
+            ) Arrangement.Center else Arrangement.Top,
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.secondary)
         ) {
             when (val currentState = state) {
-                MainViewModel.State.NotSignedIn -> {
-                    SignedOutWarning(
-                        onClick = { model.onSignInClick() },
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                MainViewModel.State.HumanityCheck -> {
+                    WebView(
+                        url = "https://ficbook-proxer.iameverybody.workers.dev/?url=https://ficbook.net",
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
 
+                MainViewModel.State.Initialization -> {
+                    InitializationView(modifier = Modifier.align(Alignment.CenterHorizontally))
+                }
+
                 is MainViewModel.State.SignedIn -> {
-                    Feed(model = currentState.feed)
+                    FeedView()
                 }
 
                 MainViewModel.State.SigningIn -> {
                     SignIn(
-                        onClick = { /*TODO*/ },
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(top = 48.dp)
+                            .padding(horizontal = 22.dp)
+                    )
+                }
+
+                is MainViewModel.State.PermissionNeeded -> {
+                    RequestPermissionsView(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        permissions = currentState.permissions,
+                        onPermissionGranted = { model.onPermissionGranted() }
                     )
                 }
             }
         }
     }
-}
-
-@Composable
-private fun SignedOutWarning(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = modifier
-            .background(
-                color = MaterialTheme.colorScheme.errorContainer,
-                shape = RoundedCornerShape(12.dp)
-            )
-            .padding(18.dp)
-    ) {
-        Text(
-            text = stringResource(R.string.warning_signed_out),
-            style = TextStyle(
-                color = MaterialTheme.colorScheme.onErrorContainer,
-                fontSize = 16.sp
-            )
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Button(
-            onClick = onClick,
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonColors(
-                containerColor = MaterialTheme.colorScheme.error,
-                contentColor = MaterialTheme.colorScheme.onError,
-                disabledContainerColor = MaterialTheme.colorScheme.error,
-                disabledContentColor = MaterialTheme.colorScheme.onError
-            )
-        ) {
-            Text(
-                text = stringResource(R.string.sign_in).uppercase(),
-                style = TextStyle(
-                    color = MaterialTheme.colorScheme.onError,
-                    fontSize = 18.sp
-                )
-            )
-        }
-    }
-}
-
-@Composable
-private fun SignIn(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = modifier.padding(18.dp)
-    ) {
-        OutlinedTextField(value = "", onValueChange = {})
-        Spacer(modifier = Modifier.height(16.dp))
-        OutlinedTextField(value = "", onValueChange = {})
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = onClick,
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonColors(
-                containerColor = MaterialTheme.colorScheme.background,
-                contentColor = MaterialTheme.colorScheme.onBackground,
-                disabledContainerColor = MaterialTheme.colorScheme.background,
-                disabledContentColor = MaterialTheme.colorScheme.onBackground
-            )
-        ) {
-            Text(
-                text = stringResource(R.string.sign_in).uppercase(),
-                style = TextStyle(
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontSize = 18.sp
-                )
-            )
-        }
-    }
-}
-
-@Composable
-private fun UserBlock(
-    user: FHAuthManager.User,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-    ) {
-        Image(
-            painter = painterResource(id = user.avatarId),
-            contentDescription = "avatar",
-            modifier = Modifier.size(42.dp)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = user.name,
-            maxLines = 1,
-            style = TextStyle(
-                color = MaterialTheme.colorScheme.primary,
-                fontSize = 21.sp
-            )
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun ContentPreview() {
-    FickbookAuthorHelperTheme {
-        Content(mockPageModel)
-    }
-}
-
-@Preview
-@Composable
-private fun UserBlockPreview() {
-    FickbookAuthorHelperTheme {
-        UserBlock(
-            user = mockUser
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun SignedOutWarningPreview() {
-    SignedOutWarning(onClick = {})
-}
-
-@Preview
-@Composable
-private fun SignInPreview() {
-    SignIn(onClick = { })
 }
 

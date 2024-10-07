@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">FickbookAuthorHelper</string>
+    <string name="app_name">Fickbook</string>
     <string name="warning_signed_out">You are signed out!</string>
     <string name="sign_in">Sign In</string>
     <string name="error_connection_reset">Connection failed. Please contact the developer.</string>
@@ -11,4 +11,40 @@
     <string name="error_timeout">The response timeout expired. Please, try later…</string>
     <string name="error_backend_unknown_exception">An unknown error occurred while executing your request. Please, try later or contact the developer…</string>
     <string name="loading">Loading…</string>
+    <string name="connection_checking">Checking your connection with Fickbook.net…</string>
+    <string name="sign_in_checking">Checking your authentication…</string>
+    <string name="sign_in_with_saved_credentials">Attempt to sign in as %s…</string>
+    <string name="already_logged_in">You are already logged in! Redirecting to your dashboard…</string>
+    <string name="please_wait">Please, wait…</string>
+    <string name="retry">Retry</string>
+    <string name="last_update">Last update: %1$s</string>
+    <string name="never">Never</string>
+    <string name="fetching_proxy_servers">Fetching proxy servers…</string>
+    <string name="search_working_proxy">Looking for a working Proxy…</string>
+    <string name="trying_connect_to">Now check: %1$s:%2$s</string>
+    <string name="failed">Failed!</string>
+    <string name="checking_latest_proxy">Checking if the latest Proxy is still alive…</string>
+    <string name="attempt_to_connect">Attempt to connect…</string>
+    <string name="proxy_found">Proxy Found:</string>
+    <string name="views">Views</string>
+    <string name="kudos">Kudos</string>
+    <string name="subscriptions">Subscriptions</string>
+    <string name="waits">Waits</string>
+    <string name="reviews">Reviews</string>
+    <string name="mark_all_as_read">Mark all as read</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="remember_me">Remember me</string>
+    <string name="post_notifications">Post notifications</string>
+    <string name="permissions_title">The following permissions are required for the app to function properly:</string>
+    <string name="permission_hint_part_1">If you accidentally denied the permission, please</string>
+    <string name="permission_hint_part_2">open settings</string>
+    <string name="permission_hint_part_3">to enable it manually.</string>
+    <string name="looking_proxy">Looking for a new proxy…</string>
+    <string name="channel_description_proxies">Information about connection to %1$s</string>
+    <string name="channel_name_proxies">Service Notifications</string>
+    <string name="loading_new_proxy_list">Loading new proxy list…</string>
+    <string name="connection_corrupted">Your connection to Ficbook was corrupted!</string>
+    <string name="connection_restored">Your connection to Ficbook was restored!</string>
+    <string name="new_address">Your new address: %1$s:%2$s</string>
 </resources>

@@ -1,12 +1,9 @@
 package com.example.fickbookauthorhelper.logic.http
 
-import com.example.fickbookauthorhelper.FHApplication.Companion.FICKBOOK_URL
-import com.example.fickbookauthorhelper.logic.FHEvent
+import com.example.fickbookauthorhelper.FHApplication.Companion.FICBOOK_URL
+import com.example.fickbookauthorhelper.logic.IEvent
 import com.example.fickbookauthorhelper.logic.IEventEmitter
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
+import com.example.fickbookauthorhelper.logic.http.client.IClientProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.FormBody
@@ -15,7 +12,6 @@ import org.json.JSONObject
 import java.io.IOException
 import java.net.SocketException
 import javax.inject.Inject
-import javax.inject.Singleton
 
 interface IHttpSignInHelper {
     suspend fun signIn(username: String, password: String): Result<Unit>
@@ -63,11 +59,15 @@ interface IHttpSignInHelper {
 }
 
 class HttpSignInHelper @Inject constructor(
-    private val clientProvider: IHttpClientProvider,
+    private val clientProvider: IClientProvider,
     private val eventEmitter: IEventEmitter
 ) : IHttpSignInHelper {
+    sealed class Event : IEvent {
+        data object SignedInEvent : Event()
+    }
+
     override suspend fun signIn(username: String, password: String): Result<Unit> {
-        val loginPath = "$FICKBOOK_URL/login_check"
+        val loginPath = "$FICBOOK_URL/login_check"
 
         val formBody = FormBody.Builder()
             .add("login", username)
@@ -82,14 +82,14 @@ class HttpSignInHelper @Inject constructor(
 
         return withContext(Dispatchers.IO) {
             try {
-                val response = clientProvider.client.newCall(request).execute()
+                val response = clientProvider.client().newCall(request).execute()
                 if (response.isSuccessful) {
                     val responseData = response.body?.string()
                     responseData?.let {
                         try {
                             val responseJson = JSONObject(it)
                             if (responseJson.optBoolean("result", false)) {
-                                eventEmitter.emit(FHEvent.SignedInEvent)
+                                eventEmitter.pushEvent(Event.SignedInEvent)
                                 Result.success(Unit)
                             } else {
                                 val errorJson = responseJson.getJSONObject("error")
@@ -123,18 +123,4 @@ class HttpSignInHelper @Inject constructor(
             }
         }
     }
-}
-
-@Module
-@InstallIn(SingletonComponent::class)
-object SignInHelperModule {
-    @Singleton
-    @Provides
-    fun provideSignInHelper(clientProvider: IHttpClientProvider, eventEmitter: IEventEmitter): HttpSignInHelper {
-        return HttpSignInHelper(clientProvider, eventEmitter)
-    }
-
-    @Singleton
-    @Provides
-    fun provideISignInHelper(signInHelper: HttpSignInHelper): IHttpSignInHelper = signInHelper
 }
