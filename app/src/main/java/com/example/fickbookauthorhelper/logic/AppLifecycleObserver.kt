@@ -9,26 +9,28 @@ import javax.inject.Singleton
 
 @Singleton
 class AppLifecycleObserver @Inject constructor() : DefaultLifecycleObserver {
-    private val _appInBackground = MutableStateFlow(false)
-    val appInBackground: StateFlow<Boolean> get() = _appInBackground
+    private val _appInBackgroundFlow = MutableStateFlow(false)
+    val appInBackgroundFlow: StateFlow<Boolean> get() = _appInBackgroundFlow
+    val appInBackground: Boolean
+        get() = _appInBackgroundFlow.value
 
     override fun onStart(owner: LifecycleOwner) {
         super.onStart(owner)
-        _appInBackground.value = false
+        _appInBackgroundFlow.value = false
     }
 
     override fun onResume(owner: LifecycleOwner) {
         super.onResume(owner)
-        _appInBackground.value = false
+        _appInBackgroundFlow.value = false
     }
 
     override fun onStop(owner: LifecycleOwner) {
         super.onStop(owner)
-        _appInBackground.value = true
+        _appInBackgroundFlow.value = true
     }
 
     override fun onPause(owner: LifecycleOwner) {
         super.onPause(owner)
-        _appInBackground.value = true
+        _appInBackgroundFlow.value = true
     }
 }
