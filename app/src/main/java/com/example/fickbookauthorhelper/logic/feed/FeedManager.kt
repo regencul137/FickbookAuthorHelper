@@ -1,59 +1,107 @@
 package com.example.fickbookauthorhelper.logic.feed
 
+import android.content.Context
+import androidx.work.BackoffPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
+import com.example.fickbookauthorhelper.logic.AuthManager
 import com.example.fickbookauthorhelper.logic.IEvent
+import com.example.fickbookauthorhelper.logic.IEventEmitter
+import com.example.fickbookauthorhelper.logic.IEventProvider
+import com.example.fickbookauthorhelper.logic.ISignedInProvider
 import com.example.fickbookauthorhelper.logic.feed.FeedManager.GainFeed
 import com.example.fickbookauthorhelper.logic.http.IHttpFeedLoader
 import com.example.fickbookauthorhelper.logic.http.IHttpFeedLoader.FicStat
 import com.example.fickbookauthorhelper.logic.storage.IFeedStorageProvider
 import com.example.fickbookauthorhelper.logic.storage.IFeedStorageSaver
+import com.example.fickbookauthorhelper.logic.workers.FeedWorker
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.isActive
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
 interface IFeedManager {
     suspend fun updateFeedFromSite()
     fun saveFeedToStorage()
+}
+
+interface IFeedProvider {
     val feedFlow: Flow<GainFeed?>
     val lastUpdateTimeFlow: Flow<Long?>
 }
 
 @Singleton
 class FeedManager @Inject constructor(
+    @ApplicationContext private val context: Context,
+    signedInProvider: ISignedInProvider,
     private val feedLoader: IHttpFeedLoader,
     private val feedStorageSaver: IFeedStorageSaver,
     private val feedStorageProvider: IFeedStorageProvider,
-    private val coroutineScope: CoroutineScope
-) : IFeedManager {
+    private val eventProvider: IEventProvider,
+    private val eventEmitter: IEventEmitter
+) : IFeedManager, IFeedProvider {
     companion object {
-        private const val UPDATE_INTERVAL = 10000L
+        const val UPDATE_INTERVAL = 60000L
+    }
+
+    sealed class Event : IEvent {
+        data class FeedUpdated(val gainFeed: GainFeed) : Event()
     }
 
     private val _feedFlow = MutableStateFlow<GainFeed?>(null)
     override val feedFlow: Flow<GainFeed?> get() = _feedFlow
-    private var latestFeedFromSite: IHttpFeedLoader.Feed? = null
 
     private val _lastUpdateTimeFlow = MutableStateFlow<Long?>(null)
     override val lastUpdateTimeFlow: Flow<Long?> get() = _lastUpdateTimeFlow
 
+    private var latestFeedFromSite: IHttpFeedLoader.Feed? = null
+
     init {
+        if (signedInProvider.isSignedIn.value == true) {
+            startFeedUpdateWork()
+        }
+        CoroutineScope(Dispatchers.Main + SupervisorJob()).launch { handleEvents() }
+    }
+
+    private suspend fun handleEvents() {
+        eventProvider.events.collectLatest {
+            when (it) {
+                is AuthManager.Event.SignedIn -> {
+                    startFeedUpdateWork()
+                }
+            }
+        }
+    }
+
+    private fun startFeedUpdateWork() {
         updateFeedFromStore()
-        startAutomaticFeedUpdate()
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            FeedWorker.WORK_NAME,
+            ExistingWorkPolicy.REPLACE,
+            OneTimeWorkRequest.Builder(FeedWorker::class.java).setBackoffCriteria(
+                BackoffPolicy.LINEAR,
+                UPDATE_INTERVAL,
+                TimeUnit.MILLISECONDS
+            ).build()
+        )
     }
 
     override suspend fun updateFeedFromSite() {
@@ -96,7 +144,8 @@ class FeedManager @Inject constructor(
                     GainFeed.GainFicStat(gain = gain, ficStat = newFicStat)
                 }
             }
-            _feedFlow.value = GainFeed(stats = gainFeedStats)
+            val gainFeed = GainFeed(stats = gainFeedStats)
+            pushFeedInfo(gainFeed)
         } ?: run {
             updateWithNoGain(feed)
         }
@@ -131,13 +180,9 @@ class FeedManager @Inject constructor(
         feedStorageSaver.saveFeedLoadingDate(currentTime)
     }
 
-    private fun startAutomaticFeedUpdate() {
-        coroutineScope.launch {
-            while (isActive) {
-                updateFeedFromSite()
-                delay(UPDATE_INTERVAL)
-            }
-        }
+    private fun pushFeedInfo(gainFeed: GainFeed?) {
+        _feedFlow.value = gainFeed
+        gainFeed?.let { eventEmitter.pushEvent(Event.FeedUpdated(it)) }
     }
 
     private fun serializeFeed(feed: IHttpFeedLoader.Feed): String {
@@ -170,14 +215,12 @@ class FeedManager @Inject constructor(
 
 @Module
 @InstallIn(SingletonComponent::class)
-object FeedModule {
-    @Provides
+abstract class FeedModule {
+    @Binds
     @Singleton
-    fun provideFeedManager(
-        feedLoader: IHttpFeedLoader,
-        feedStorageSaver: IFeedStorageSaver,
-        feedStorageProvider: IFeedStorageProvider
-    ): IFeedManager {
-        return FeedManager(feedLoader, feedStorageSaver, feedStorageProvider, CoroutineScope(Dispatchers.IO))
-    }
+    abstract fun bindIFeedManager(feedManager: FeedManager): IFeedManager
+
+    @Binds
+    @Singleton
+    abstract fun bindIFeedProvider(feedManager: FeedManager): IFeedProvider
 }
