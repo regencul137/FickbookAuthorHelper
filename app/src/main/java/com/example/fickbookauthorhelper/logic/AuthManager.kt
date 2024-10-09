@@ -1,15 +1,16 @@
 package com.example.fickbookauthorhelper.logic
 
-import com.example.fickbookauthorhelper.logic.http.IHttpFeedLoader
+import android.content.Context
+import androidx.work.WorkManager
 import com.example.fickbookauthorhelper.logic.http.IHttpSignInChecker
 import com.example.fickbookauthorhelper.logic.http.IHttpSignInHelper
 import com.example.fickbookauthorhelper.logic.http.IHttpSignOutHelper
 import com.example.fickbookauthorhelper.logic.storage.ISecureStorageProvider
 import com.example.fickbookauthorhelper.logic.storage.ISecureStorageSaver
-import com.example.fickbookauthorhelper.logic.storage.SecureStorage
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,26 +23,32 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
-interface IAuthManager {
+interface ISignedInProvider {
     val isSignedIn: StateFlow<Boolean?>
+}
+
+interface IAuthManager {
     val savedUsername: String?
     fun startInitialization()
     suspend fun signIn(username: String, password: String, rememberMe: Boolean): Result<Unit>
     suspend fun signOut(): Result<Boolean>
 }
 
+@Singleton
 class AuthManager @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val eventProvider: IEventProvider,
     private val eventEmitter: IEventEmitter,
     private val httpCheckSignInHelper: IHttpSignInChecker,
     private val httpSignInHelper: IHttpSignInHelper,
     private val httpSignOutHelper: IHttpSignOutHelper,
-    private val httpFeedLoader: IHttpFeedLoader,
     private val userManager: UserManager,
     private val secureStorageSaver: ISecureStorageSaver,
     private val secureStorageProvider: ISecureStorageProvider
-) : IAuthManager {
+) : IAuthManager, ISignedInProvider {
     sealed class Event : IEvent {
+        data object SignedIn : Event()
+        data object SignedOut : Event()
         data class CredentialsLoaded(val username: String) : Event()
     }
 
@@ -61,9 +68,8 @@ class AuthManager @Inject constructor(
             httpCheckSignInHelper.isSignedIn()
                 .onSuccess {
                     if (it) {
-                        _isSignedIn.emit(true)
-                        userManager.loadUser().onFailure { _isSignedIn.emit(false) }
-                        httpFeedLoader.loadFeed()
+                        handleSignedIn()
+                        userManager.loadUser().onFailure { handleSignedOut() }
                     } else {
                         tryToSignInUsingSavedCredentials()
                     }
@@ -81,9 +87,8 @@ class AuthManager @Inject constructor(
                 secureStorageSaver.saveUsername(username)
                 secureStorageSaver.savePassword(password)
             }
-            _isSignedIn.emit(true)
-            userManager.loadUser()
-            httpFeedLoader.loadFeed()
+            handleSignedIn()
+            userManager.loadUser().onFailure { handleSignedOut() }
         }
         return result
     }
@@ -113,40 +118,30 @@ class AuthManager @Inject constructor(
                     secureStorageSaver.savePassword("")
                 }
         } else {
-            _isSignedIn.emit(false)
+            handleSignedOut()
         }
+    }
+
+    private fun handleSignedIn() {
+        _isSignedIn.tryEmit(true)
+        eventEmitter.pushEvent(Event.SignedIn)
+    }
+
+    private fun handleSignedOut() {
+        _isSignedIn.tryEmit(false)
+        eventEmitter.pushEvent(Event.SignedOut)
+        WorkManager.getInstance(context).cancelAllWork()
     }
 }
 
 @Module
 @InstallIn(SingletonComponent::class)
-object AppModule {
-    @Provides
+abstract class AuthManagerModule {
+    @Binds
     @Singleton
-    fun provideAuthManager(
-        eventProvider: IEventProvider,
-        eventEmitter: IEventEmitter,
-        checkSignInHelper: IHttpSignInChecker,
-        signInHelper: IHttpSignInHelper,
-        httpSignOutHelper: IHttpSignOutHelper,
-        feedLoader: IHttpFeedLoader,
-        userManager: UserManager,
-        secureStorage: SecureStorage
-    ): AuthManager {
-        return AuthManager(
-            eventProvider,
-            eventEmitter,
-            checkSignInHelper,
-            signInHelper,
-            httpSignOutHelper,
-            feedLoader,
-            userManager,
-            secureStorage,
-            secureStorage
-        )
-    }
+    abstract fun bindIAuthManager(authManager: AuthManager): IAuthManager
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideIAuthManager(authManager: AuthManager): IAuthManager = authManager
+    abstract fun bindISignedInProvider(authManager: AuthManager): ISignedInProvider
 }
