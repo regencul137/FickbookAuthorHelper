@@ -47,4 +47,16 @@
     <string name="connection_corrupted">Your connection to Ficbook was corrupted!</string>
     <string name="connection_restored">Your connection to Ficbook was restored!</string>
     <string name="new_address">Your new address: %1$s:%2$s</string>
+    <string name="channel_name_feed">Feed Notifications</string>
+    <string name="channel_feed_description">Information about new reviews, kudos, subscriptions, etc…</string>
+    <string name="new_kudos_for">New Kudos for %1$s!</string>
+    <string name="new_reviews_for">New Reviews for %1$s!</string>
+    <string name="new_subscriptions_for">New Subscriptions for %1$s!</string>
+    <string name="new_views_for">New Views for %1$s!</string>
+    <string name="new_waits_for">New Waits for %1$s!</string>
+    <string name="notification_text_feed">New: %1$d, all for today: %2$d</string>
+    <string name="mark_as_read">Mark as read</string>
+    <string name="open_the_app">Open the app</string>
+    <string name="use_vpn">Use VPN</string>
+    <string name="sign_out">Sign Out</string>
 </resources>
