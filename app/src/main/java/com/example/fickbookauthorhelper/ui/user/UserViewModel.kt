@@ -6,17 +6,13 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fickbookauthorhelper.logic.IUserManager
-import com.example.fickbookauthorhelper.logic.storage.IAppSettingsProvider
-import com.example.fickbookauthorhelper.logic.storage.IAppSettingsSaver
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class UserViewModel @Inject constructor(
-    private val userManager: IUserManager,
-    private val appSettingsProvider: IAppSettingsProvider,
-    private val appSettingsSaver: IAppSettingsSaver
+    private val userManager: IUserManager
 ) : ViewModel() {
 
     private val _username = MutableLiveData<String?>()
@@ -25,13 +21,9 @@ class UserViewModel @Inject constructor(
     private val _avatar = MutableLiveData<Drawable?>()
     val avatar: LiveData<Drawable?> get() = _avatar
 
-    private val _isVpnEnabled = MutableLiveData<Boolean>()
-    val isVpnEnabled: LiveData<Boolean> get() = _isVpnEnabled
-
     init {
         observeUserData()
         loadUserData()
-        loadVpnSetting()
     }
 
     private fun observeUserData() {
@@ -53,16 +45,5 @@ class UserViewModel @Inject constructor(
                 // Обработка ошибки, если необходимо
             }
         }
-    }
-
-    private fun loadVpnSetting() {
-        _isVpnEnabled.value = appSettingsProvider.isVpnEnabled()
-    }
-
-    fun toggleVpn() {
-        val currentStatus = _isVpnEnabled.value ?: false
-        val newStatus = !currentStatus
-        _isVpnEnabled.value = newStatus
-        appSettingsSaver.setVpnEnabled(newStatus)
     }
 }
