@@ -94,8 +94,7 @@ private fun Content(model: MainViewModel) {
                 ) {
                     UserView(
                         contentColor = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
-                        onSignOutClick = { model.signOut() }
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp)
                     )
                 }
         }) { innerPadding ->

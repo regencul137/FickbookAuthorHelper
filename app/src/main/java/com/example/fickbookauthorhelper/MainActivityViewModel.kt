@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fickbookauthorhelper.logic.IAuthManager
 import com.example.fickbookauthorhelper.logic.IEventProvider
+import com.example.fickbookauthorhelper.logic.ISignedInProvider
 import com.example.fickbookauthorhelper.logic.PermissionHelper
 import com.example.fickbookauthorhelper.logic.http.client.ClientProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,7 +19,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val authManager: IAuthManager,
+    private val signedInProvider: ISignedInProvider,
     private val permissionHelper: PermissionHelper,
     private val eventProvider: IEventProvider
 ) : ViewModel() {
@@ -36,7 +37,7 @@ class MainViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            authManager.isSignedIn.collectLatest { isSignedIn ->
+            signedInProvider.isSignedIn.collectLatest { isSignedIn ->
                 when (isSignedIn) {
                     true -> _state.emit(State.SignedIn)
                     false -> _state.emit(State.SigningIn)
@@ -68,14 +69,6 @@ class MainViewModel @Inject constructor(
                         _state.value = previousState
                     }
                 }
-            }
-        }
-    }
-
-    fun signOut() {
-        viewModelScope.launch {
-            authManager.signOut().onSuccess {
-                _state.emit(State.Initialization)
             }
         }
     }
