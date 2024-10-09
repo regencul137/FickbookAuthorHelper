@@ -6,16 +6,22 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fickbookauthorhelper.R
+import com.example.fickbookauthorhelper.logic.IEventProvider
 import com.example.fickbookauthorhelper.logic.feed.FeedManager
 import com.example.fickbookauthorhelper.logic.feed.FeedType
 import com.example.fickbookauthorhelper.logic.feed.IFeedManager
+import com.example.fickbookauthorhelper.logic.feed.IFeedProvider
+import com.example.fickbookauthorhelper.logic.http.HttpFeedLoader
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class FeedViewModel @Inject constructor(
-    private val feedManager: IFeedManager
+    private val feedManager: IFeedManager,
+    private val feedProvider: IFeedProvider,
+    private val eventProvider: IEventProvider
 ) : ViewModel() {
     private val _isLoading = MutableLiveData(false)
     val isLoading: LiveData<Boolean> get() = _isLoading
@@ -27,26 +33,25 @@ class FeedViewModel @Inject constructor(
     val lastUpdate: LiveData<Long?> get() = _lastUpdate
 
     init {
+        viewModelScope.launch {
+            eventProvider.events.collectLatest {
+                when (it) {
+                    HttpFeedLoader.Event.FeedLoadingStarted -> _isLoading.value = true
+                    is HttpFeedLoader.Event.FeedLoadingEnded -> _isLoading.value = false
+                }
+            }
+        }
         collectData()
-        loadFeed()
     }
 
     fun markAllAsRead() {
         feedManager.saveFeedToStorage()
-        loadFeed()
-    }
-
-    private fun loadFeed() {
-        viewModelScope.launch {
-            _isLoading.value = true
-            feedManager.updateFeedFromSite()
-            _isLoading.value = false
-        }
+        viewModelScope.launch { feedManager.updateFeedFromSite() }
     }
 
     private fun collectData() {
         viewModelScope.launch {
-            feedManager.feedFlow.collect { feed ->
+            feedProvider.feedFlow.collect { feed ->
                 feed?.let {
                     val blocks = mutableListOf<Block>()
                     feed.stats.forEach { (feedType, data) ->
@@ -60,7 +65,7 @@ class FeedViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
-            feedManager.lastUpdateTimeFlow.collect { lastUpdateTime ->
+            feedProvider.lastUpdateTimeFlow.collect { lastUpdateTime ->
                 _lastUpdate.value = lastUpdateTime
             }
         }
