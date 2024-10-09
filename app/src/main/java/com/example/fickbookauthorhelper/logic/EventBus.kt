@@ -1,7 +1,7 @@
 package com.example.fickbookauthorhelper.logic
 
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
@@ -28,6 +28,7 @@ sealed class BaseEvent : IEvent {
     data object ConnectionCorrupted : BaseEvent()
 }
 
+@Singleton
 class EventBus @Inject constructor() : IEventProvider, IEventEmitter {
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
@@ -42,18 +43,12 @@ class EventBus @Inject constructor() : IEventProvider, IEventEmitter {
 
 @Module
 @InstallIn(SingletonComponent::class)
-object EventBusModule {
+abstract class EventBusModule {
     @Singleton
-    @Provides
-    fun provideEventBus(): EventBus {
-        return EventBus()
-    }
+    @Binds
+    abstract fun provideIEventProvider(eventBus: EventBus): IEventProvider
 
     @Singleton
-    @Provides
-    fun provideEventProvider(eventBus: EventBus): IEventProvider = eventBus
-
-    @Singleton
-    @Provides
-    fun provideEventEmitter(eventBus: EventBus): IEventEmitter = eventBus
+    @Binds
+    abstract fun provideIEventEmitter(eventBus: EventBus): IEventEmitter
 }
