@@ -32,7 +32,7 @@ class PermissionHelper @Inject constructor(
     init {
         checkPermissions()
         CoroutineScope(Dispatchers.Default).launch {
-            lifecycleObserver.appInBackground.collectLatest {
+            lifecycleObserver.appInBackgroundFlow.collectLatest {
                 if (!it) {
                     checkPermissions()
                 }
