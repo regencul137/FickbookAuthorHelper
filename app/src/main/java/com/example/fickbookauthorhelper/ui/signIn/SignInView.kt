@@ -34,6 +34,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -59,16 +60,22 @@ import com.example.fickbookauthorhelper.R
 import com.example.fickbookauthorhelper.ui.theme.FickbookAuthorHelperTheme
 
 @Composable
-fun SignIn(
+fun SignInView(
     modifier: Modifier = Modifier,
     model: SignInViewModel = viewModel()
 ) {
+    DisposableEffect(Unit) {
+        onDispose {
+            model.onDispose()
+        }
+    }
+
     val state by model.state.collectAsState()
     val login by model.login.observeAsState("")
     val password by model.password.observeAsState("")
     val rememberMe by model.rememberMe.observeAsState(initial = false)
 
-    SignIn(
+    SignInView(
         modifier = modifier,
         state = state,
         login = login,
@@ -81,7 +88,7 @@ fun SignIn(
 }
 
 @Composable
-private fun SignIn(
+private fun SignInView(
     modifier: Modifier = Modifier,
     state: SignInViewModel.State,
     login: String,
@@ -114,10 +121,11 @@ private fun SignIn(
         disabledTextColor = unfocusedColor
     )
 
+    val contentColor = Color.White.copy(alpha = 0.5f)
     val infiniteTransition = rememberInfiniteTransition(label = "")
-    val animatedColor by infiniteTransition.animateColor(
-        initialValue = Color.White.copy(alpha = 0.5f),
-        targetValue = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+    val animatedContentColor by infiniteTransition.animateColor(
+        initialValue = contentColor,
+        targetValue = contentColor.copy(alpha = 0.4f),
         animationSpec = infiniteRepeatable(
             animation = tween(
                 durationMillis = 2000,
@@ -143,11 +151,6 @@ private fun SignIn(
             isInputEnabled = false
             errorText = null
         }
-
-        SignInViewModel.State.Success -> {
-            isInputEnabled = false
-            errorText = null
-        }
     }
 
     Column(
@@ -155,7 +158,7 @@ private fun SignIn(
         verticalArrangement = Arrangement.Center,
         modifier = modifier
             .background(
-                color = if (state == SignInViewModel.State.RequestInProcess) animatedColor else Color.White.copy(alpha = 0.5f),
+                color = if (state == SignInViewModel.State.RequestInProcess) animatedContentColor else contentColor,
                 shape = MaterialTheme.shapes.medium
             )
             .padding(24.dp)
@@ -284,7 +287,7 @@ private fun SignIn(
 @Composable
 private fun SignInPreview() {
     FickbookAuthorHelperTheme {
-        SignIn(
+        SignInView(
             modifier = Modifier.padding(25.dp),
             state = SignInViewModel.State.Input,
             login = "",

@@ -25,29 +25,11 @@ import javax.inject.Singleton
 object HttpModule {
     @Singleton
     @Provides
-    fun provideHttpSignInHelper(
-        clientProvider: IClientProvider,
-        eventEmitter: IEventEmitter
-    ): HttpSignInHelper {
-        return HttpSignInHelper(clientProvider, eventEmitter)
-    }
-
-    @Singleton
-    @Provides
     fun provideHttpSignInChecker(
         clientProvider: IClientProvider,
         eventEmitter: IEventEmitter
     ): HttpSignInChecker {
         return HttpSignInChecker(clientProvider, eventEmitter)
-    }
-
-    @Singleton
-    @Provides
-    fun provideHttpSignOutChecker(
-        clientProvider: IClientProvider,
-        eventEmitter: IEventEmitter
-    ): HttpSignOutHelper {
-        return HttpSignOutHelper(clientProvider, eventEmitter)
     }
 
     @Singleton
@@ -93,7 +75,7 @@ object HttpModule {
 
     @Singleton
     @Provides
-    fun provideIFeedLoader(feedLoader: HttpFeedLoader ): IHttpFeedLoader = feedLoader
+    fun provideIFeedLoader(feedLoader: HttpFeedLoader): IHttpFeedLoader = feedLoader
 
     @Singleton
     @Provides

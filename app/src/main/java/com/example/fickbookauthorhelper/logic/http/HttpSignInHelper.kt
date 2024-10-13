@@ -1,8 +1,6 @@
 package com.example.fickbookauthorhelper.logic.http
 
 import com.example.fickbookauthorhelper.FHApplication.Companion.FICBOOK_URL
-import com.example.fickbookauthorhelper.logic.IEvent
-import com.example.fickbookauthorhelper.logic.IEventEmitter
 import com.example.fickbookauthorhelper.logic.http.client.IClientProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -12,6 +10,7 @@ import org.json.JSONObject
 import java.io.IOException
 import java.net.SocketException
 import javax.inject.Inject
+import javax.inject.Singleton
 
 interface IHttpSignInHelper {
     suspend fun signIn(username: String, password: String): Result<Unit>
@@ -58,14 +57,10 @@ interface IHttpSignInHelper {
     }
 }
 
+@Singleton
 class HttpSignInHelper @Inject constructor(
-    private val clientProvider: IClientProvider,
-    private val eventEmitter: IEventEmitter
+    private val clientProvider: IClientProvider
 ) : IHttpSignInHelper {
-    sealed class Event : IEvent {
-        data object SignedInEvent : Event()
-    }
-
     override suspend fun signIn(username: String, password: String): Result<Unit> {
         val loginPath = "$FICBOOK_URL/login_check"
 
@@ -89,7 +84,6 @@ class HttpSignInHelper @Inject constructor(
                         try {
                             val responseJson = JSONObject(it)
                             if (responseJson.optBoolean("result", false)) {
-                                eventEmitter.pushEvent(Event.SignedInEvent)
                                 Result.success(Unit)
                             } else {
                                 val errorJson = responseJson.getJSONObject("error")

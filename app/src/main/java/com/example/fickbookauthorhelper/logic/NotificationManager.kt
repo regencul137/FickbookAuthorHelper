@@ -26,9 +26,11 @@ class NotificationService @Inject constructor(
     private val eventProvider: IEventProvider
 ) {
     companion object {
-        sealed class Channel(val channelId: String, val notificationId: Int) {
-            data object FeedChannel : Channel("FEED_CHANNEL", 1001)
+        sealed class Channel(val channelId: String) {
+            data object FeedChannel : Channel("FEED_CHANNEL")
         }
+
+        const val PARAM_NOTIFICATION_ID = "PARAM_NOTIFICATION_ID"
     }
 
     private val notificationManager =
@@ -46,6 +48,10 @@ class NotificationService @Inject constructor(
                 }
             }
         }
+    }
+
+    fun cancelNotification(notificationId: Int) {
+        notificationManager.cancel(notificationId)
     }
 
     fun configureNotificationChannels() {
@@ -71,9 +77,12 @@ class NotificationService @Inject constructor(
             FeedType.WAITS -> applicationContext.getString(R.string.new_waits_for, stat.ficName)
         }
 
+        val notificationId = (type.toString() + stat.ficName).hashCode()
         val text = applicationContext.getString(R.string.notification_text_feed, stat.gain, stat.stat)
 
-        val markAsReadIntent = Intent(applicationContext, MarkAsReadReceiver::class.java)
+        val markAsReadIntent = Intent(applicationContext, MarkAsReadReceiver::class.java).apply {
+            putExtra(PARAM_NOTIFICATION_ID, notificationId)
+        }
         val markAsReadPendingIntent = PendingIntent.getBroadcast(
             applicationContext,
             0,
@@ -104,11 +113,11 @@ class NotificationService @Inject constructor(
                 applicationContext.getString(R.string.open_the_app),
                 openAppPendingIntent
             )
+            .setContentIntent(openAppPendingIntent)
             .setDeleteIntent(markAsReadPendingIntent)
             .setAutoCancel(false)
 
-        val id = type.toString() + stat.ficName
-        notificationManager.notify(id.hashCode(), builder.build())
+        notificationManager.notify(notificationId, builder.build())
     }
 
     private fun buildFeedNotificationChannel(): NotificationChannel {

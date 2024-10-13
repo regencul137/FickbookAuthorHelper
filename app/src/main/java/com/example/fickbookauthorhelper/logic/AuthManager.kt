@@ -48,6 +48,7 @@ class AuthManager @Inject constructor(
 ) : IAuthManager, ISignedInProvider {
     sealed class Event : IEvent {
         data object SignedIn : Event()
+        data object SigningOut : Event()
         data object SignedOut : Event()
         data class CredentialsLoaded(val username: String) : Event()
     }
@@ -94,7 +95,12 @@ class AuthManager @Inject constructor(
     }
 
     override suspend fun signOut(): Result<Boolean> {
+        eventEmitter.pushEvent(Event.SigningOut)
         return httpSignOutHelper.signOut()
+            .onSuccess {
+                secureStorageSaver.savePassword("")
+                handleSignedOut()
+            }
     }
 
     private suspend fun handleEvents() {

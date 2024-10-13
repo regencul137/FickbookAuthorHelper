@@ -4,7 +4,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.fickbookauthorhelper.logic.IAuthManager
+import com.example.fickbookauthorhelper.logic.AuthManager
 import com.example.fickbookauthorhelper.logic.IEventProvider
 import com.example.fickbookauthorhelper.logic.ISignedInProvider
 import com.example.fickbookauthorhelper.logic.PermissionHelper
@@ -29,6 +29,7 @@ class MainViewModel @Inject constructor(
         data object Initialization : State()
         data object SigningIn : State()
         data object SignedIn : State()
+        data object SigningOut : State()
     }
 
     private val _state = MutableStateFlow<State>(State.Initialization)
@@ -37,18 +38,23 @@ class MainViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            signedInProvider.isSignedIn.collectLatest { isSignedIn ->
-                when (isSignedIn) {
-                    true -> _state.emit(State.SignedIn)
-                    false -> _state.emit(State.SigningIn)
-                    null -> {}
-                }
-            }
-        }
-        viewModelScope.launch {
             eventProvider.events.collectLatest {
-                if (it is ClientProvider.Event.HumanityCheck) {
-                    _state.emit(State.HumanityCheck)
+                when (it) {
+                    is ClientProvider.Event.HumanityCheck -> {
+                        _state.emit(State.HumanityCheck)
+                    }
+
+                    is AuthManager.Event.SignedIn -> {
+                        _state.emit(State.SignedIn)
+                    }
+
+                    is AuthManager.Event.SignedOut -> {
+                        _state.emit(State.SigningIn)
+                    }
+
+                    is AuthManager.Event.SigningOut -> {
+                        _state.emit(State.SigningOut)
+                    }
                 }
             }
         }

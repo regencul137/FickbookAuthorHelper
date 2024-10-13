@@ -21,7 +21,6 @@ class SignInViewModel @Inject constructor(private val authManager: IAuthManager)
         data object Input : State()
         data object RequestInProcess : State()
         data class Error(@StringRes val messageId: Int) : State()
-        data object Success : State()
     }
 
     private val _state = MutableStateFlow<State>(State.Input)
@@ -38,6 +37,11 @@ class SignInViewModel @Inject constructor(private val authManager: IAuthManager)
 
     init {
         authManager.savedUsername?.let { _login.value = it }
+    }
+
+    fun onDispose() {
+        setState(State.Input)
+        _password.value = ""
     }
 
     internal fun onLoginChange(newLogin: String) {
@@ -60,9 +64,6 @@ class SignInViewModel @Inject constructor(private val authManager: IAuthManager)
                 password = _password.value.orEmpty(),
                 rememberMe = _rememberMe.value ?: false
             )
-                .onSuccess {
-                    setState(State.Success)
-                }
                 .onFailure {
                     when (it) {
                         IHttpSignInHelper.SignInException.ConnectionResetException -> {

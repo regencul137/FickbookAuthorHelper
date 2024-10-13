@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -74,7 +75,22 @@ fun FeedView(model: FeedViewModel = viewModel()) {
                 isLoading = isLoading,
                 hasNewFeed = feedBlocks.sumOf { it.data.sumOf { ficStat -> ficStat.gain } } > 0,
                 onReadClick = { model.markAllAsRead() })
-            FeedColumn(feedItemModels = feedBlocks)
+            if (feedBlocks.isNotEmpty()) {
+                FeedColumn(feedItemModels = feedBlocks)
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = stringResource(R.string.no_feed).uppercase(),
+                        style = TextStyle(color = MaterialTheme.colorScheme.secondaryContainer,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.W500)
+                    )
+                }
+            }
         }
     }
 }

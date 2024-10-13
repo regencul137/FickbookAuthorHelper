@@ -53,7 +53,7 @@ class FeedViewModel @Inject constructor(
         viewModelScope.launch {
             feedProvider.feedFlow.collect { feed ->
                 feed?.let {
-                    val blocks = mutableListOf<Block>()
+                    val blocks = arrayListOf<Block>()
                     feed.stats.forEach { (feedType, data) ->
                         data?.let {
                             blocks.add(Block(titleId = titleIdForFeedType(feedType), data = it))

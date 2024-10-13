@@ -28,13 +28,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.fickbookauthorhelper.logic.AppLifecycleObserver
+import com.example.fickbookauthorhelper.logic.NotificationService
 import com.example.fickbookauthorhelper.ui.feed.FeedView
 import com.example.fickbookauthorhelper.ui.initialization.InitializationView
-import com.example.fickbookauthorhelper.ui.signIn.SignIn
+import com.example.fickbookauthorhelper.ui.signIn.SignInView
 import com.example.fickbookauthorhelper.ui.theme.FickbookAuthorHelperTheme
 import com.example.fickbookauthorhelper.ui.user.UserView
+import com.example.fickbookauthorhelper.ui.views.LoadingView
 import com.example.fickbookauthorhelper.ui.views.RequestPermissionsView
 import com.example.fickbookauthorhelper.ui.views.WebView
 import dagger.hilt.android.AndroidEntryPoint
@@ -47,8 +50,17 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var lifecycleObserver: AppLifecycleObserver
 
+    @Inject
+    lateinit var notificationService: NotificationService
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val notificationId = intent.getIntExtra(NotificationService.PARAM_NOTIFICATION_ID, -1)
+        if (notificationId != -1) {
+            notificationService.cancelNotification(notificationId)
+        }
+
         lifecycle.addObserver(lifecycleObserver)
         enableEdgeToEdge()
         setContent {
@@ -100,8 +112,14 @@ private fun Content(model: MainViewModel) {
         }) { innerPadding ->
         Column(
             verticalArrangement = if (state == MainViewModel.State.Initialization
-                || state is MainViewModel.State.PermissionNeeded
-            ) Arrangement.Center else Arrangement.Top,
+                || state is MainViewModel.State.PermissionNeeded ||
+                state is MainViewModel.State.SigningOut
+            ) {
+                Arrangement.Center
+            } else {
+                Arrangement.Top
+            },
+            horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
@@ -123,7 +141,7 @@ private fun Content(model: MainViewModel) {
                 }
 
                 MainViewModel.State.SigningIn -> {
-                    SignIn(
+                    SignInView(
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally)
                             .padding(top = 48.dp)
@@ -137,6 +155,10 @@ private fun Content(model: MainViewModel) {
                         permissions = currentState.permissions,
                         onPermissionGranted = { model.onPermissionGranted() }
                     )
+                }
+
+                MainViewModel.State.SigningOut -> {
+                    LoadingView(title = stringResource(R.string.logging_out))
                 }
             }
         }
