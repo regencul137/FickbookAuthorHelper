@@ -210,6 +210,14 @@ class FeedManager @Inject constructor(
             val stat: Int
                 get() = ficStat.stat
         }
+
+        val gainCount: Int
+            get() {
+                return stats.values
+                    .filterNotNull()
+                    .flatten()
+                    .sumOf { it.gain }
+            }
     }
 }
 

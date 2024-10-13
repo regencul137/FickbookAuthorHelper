@@ -59,6 +59,7 @@
     <string name="open_the_app">Open the app</string>
     <string name="use_vpn">Use VPN</string>
     <string name="sign_out">Sign Out</string>
-    <string name="logging_out">Logging Out...</string>
+    <string name="logging_out">Logging Out…</string>
     <string name="no_feed">No Feed</string>
+    <string name="feed">Feed</string>
 </resources>

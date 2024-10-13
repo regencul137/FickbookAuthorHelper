@@ -29,9 +29,6 @@ class FeedViewModel @Inject constructor(
     private val _feedBlocks = MutableLiveData<List<Block>>()
     val feedBlocks: LiveData<List<Block>> get() = _feedBlocks
 
-    private val _lastUpdate = MutableLiveData<Long?>()
-    val lastUpdate: LiveData<Long?> get() = _lastUpdate
-
     init {
         viewModelScope.launch {
             eventProvider.events.collectLatest {
@@ -42,11 +39,6 @@ class FeedViewModel @Inject constructor(
             }
         }
         collectData()
-    }
-
-    fun markAllAsRead() {
-        feedManager.saveFeedToStorage()
-        viewModelScope.launch { feedManager.updateFeedFromSite() }
     }
 
     private fun collectData() {
@@ -62,11 +54,6 @@ class FeedViewModel @Inject constructor(
 
                     _feedBlocks.value = blocks
                 }
-            }
-        }
-        viewModelScope.launch {
-            feedProvider.lastUpdateTimeFlow.collect { lastUpdateTime ->
-                _lastUpdate.value = lastUpdateTime
             }
         }
     }
