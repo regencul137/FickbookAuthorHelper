@@ -5,11 +5,11 @@ import androidx.work.BackoffPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
-import com.example.fickbookauthorhelper.logic.AuthManager
+import com.example.fickbookauthorhelper.logic.managers.AuthManager
 import com.example.fickbookauthorhelper.logic.IEvent
 import com.example.fickbookauthorhelper.logic.IEventEmitter
 import com.example.fickbookauthorhelper.logic.IEventProvider
-import com.example.fickbookauthorhelper.logic.ISignedInProvider
+import com.example.fickbookauthorhelper.logic.managers.ISignedInProvider
 import com.example.fickbookauthorhelper.logic.feed.FeedManager.GainFeed
 import com.example.fickbookauthorhelper.logic.http.IHttpFeedLoader
 import com.example.fickbookauthorhelper.logic.http.IHttpFeedLoader.FicStat

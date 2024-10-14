@@ -4,8 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.fickbookauthorhelper.logic.AuthManager
-import com.example.fickbookauthorhelper.logic.feed.FeedManager
+import com.example.fickbookauthorhelper.logic.managers.AuthManager
 import com.example.fickbookauthorhelper.logic.feed.IFeedProvider
 import com.example.fickbookauthorhelper.logic.storage.IAppSettingsProvider
 import com.example.fickbookauthorhelper.logic.storage.IAppSettingsSaver

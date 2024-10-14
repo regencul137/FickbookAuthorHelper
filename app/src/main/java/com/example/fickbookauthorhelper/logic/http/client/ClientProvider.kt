@@ -1,6 +1,6 @@
 package com.example.fickbookauthorhelper.logic.http.client
 
-import com.example.fickbookauthorhelper.logic.CookieManager
+import com.example.fickbookauthorhelper.logic.managers.CookieManager
 import com.example.fickbookauthorhelper.logic.IEvent
 import com.example.fickbookauthorhelper.logic.IEventProvider
 import com.example.fickbookauthorhelper.logic.http.IHttpConnectionChecker

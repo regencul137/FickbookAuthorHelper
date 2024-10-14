@@ -1,7 +1,10 @@
-package com.example.fickbookauthorhelper.logic
+package com.example.fickbookauthorhelper.logic.managers
 
 import android.graphics.drawable.Drawable
 import com.example.fickbookauthorhelper.FHApplication.Companion.AVATAR_PATH
+import com.example.fickbookauthorhelper.logic.IEvent
+import com.example.fickbookauthorhelper.logic.IEventEmitter
+import com.example.fickbookauthorhelper.logic.ImageLoader
 import com.example.fickbookauthorhelper.logic.http.IHttpUserLoadHelperUser
 import dagger.Module
 import dagger.Provides

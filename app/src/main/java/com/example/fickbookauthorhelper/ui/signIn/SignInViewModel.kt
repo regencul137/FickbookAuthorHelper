@@ -6,7 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fickbookauthorhelper.R
-import com.example.fickbookauthorhelper.logic.IAuthManager
+import com.example.fickbookauthorhelper.logic.managers.IAuthManager
 import com.example.fickbookauthorhelper.logic.http.IHttpSignInHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

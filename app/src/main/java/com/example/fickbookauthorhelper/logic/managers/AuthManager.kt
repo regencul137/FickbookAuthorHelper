@@ -1,7 +1,10 @@
-package com.example.fickbookauthorhelper.logic
+package com.example.fickbookauthorhelper.logic.managers
 
 import android.content.Context
 import androidx.work.WorkManager
+import com.example.fickbookauthorhelper.logic.IEvent
+import com.example.fickbookauthorhelper.logic.IEventEmitter
+import com.example.fickbookauthorhelper.logic.IEventProvider
 import com.example.fickbookauthorhelper.logic.http.IHttpSignInChecker
 import com.example.fickbookauthorhelper.logic.http.IHttpSignInHelper
 import com.example.fickbookauthorhelper.logic.http.IHttpSignOutHelper

@@ -6,7 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.fickbookauthorhelper.logic.AuthManager
+import com.example.fickbookauthorhelper.logic.managers.AuthManager
 import com.example.fickbookauthorhelper.logic.IEventProvider
 import com.example.fickbookauthorhelper.logic.PermissionHelper
 import com.example.fickbookauthorhelper.logic.feed.IFeedManager

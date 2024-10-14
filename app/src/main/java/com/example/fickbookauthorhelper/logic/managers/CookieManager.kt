@@ -1,7 +1,8 @@
-package com.example.fickbookauthorhelper.logic
+package com.example.fickbookauthorhelper.logic.managers
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.example.fickbookauthorhelper.logic.IEventProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
